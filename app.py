@@ -5,7 +5,7 @@ import os
 import subprocess
 
 app = Flask(__name__)
-
+app.debug = True
 uploads_dir = os.path.join(app.instance_path, 'uploads')
 
 os.makedirs(uploads_dir, exist_ok=True)
@@ -22,8 +22,7 @@ def detect():
     video = request.files['video']
     video.save(os.path.join(uploads_dir, secure_filename(video.filename)))
     print(video)
-    subprocess.run("ls")
-    subprocess.run(['python3', 'detect.py', '--source', os.path.join(uploads_dir, secure_filename(video.filename))])
+    subprocess.run(['python', 'detect.py', '--hide-labels', '--conf-thres', '0.33', '--save-crop', '--weights', 'yolov5m_epoch_18.pt', '--source', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True)
 
     # return os.path.join(uploads_dir, secure_filename(video.filename))
     obj = secure_filename(video.filename)
@@ -39,7 +38,8 @@ def return_file():
         # return send_from_directory(loc, obj)
     except Exception as e:
         return str(e)
-
+if __name__ == "__main__":
+    app.run(debug=True)
 # @app.route('/display/<filename>')
 # def display_video(filename):
 # 	#print('display_video filename: ' + filename)
