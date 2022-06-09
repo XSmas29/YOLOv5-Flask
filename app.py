@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, redirect, send_file, url_for
 from werkzeug.utils import secure_filename, send_from_directory
 import os
 import subprocess
+import ast
+import json
 
 app = Flask(__name__)
 app.debug = True
@@ -22,22 +24,19 @@ def detect():
     video = request.files['video']
     video.save(os.path.join(uploads_dir, secure_filename(video.filename)))
     print(video)
-    subprocess.run(['python', 'detect.py', '--hide-labels', '--conf-thres', '0.33', '--save-crop', '--weights', 'yolov5m_epoch_18.pt', '--source', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True)
-
-    # return os.path.join(uploads_dir, secure_filename(video.filename))
-    obj = secure_filename(video.filename)
-    return obj
-
-@app.route('/return-files', methods=['GET'])
-def return_file():
-    obj = request.args.get('obj')
-    loc = os.path.join("runs/detect", obj)
-    print(loc)
-    try:
-        return send_file(os.path.join("runs/detect", obj), attachment_filename=obj)
-        # return send_from_directory(loc, obj)
-    except Exception as e:
-        return str(e)
+    output = subprocess.run(['python', 'ocr.py','--image', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True, stdout=subprocess.PIPE)
+    lines = output.stdout.splitlines()
+    result = []
+    for line in lines:
+        if not line.startswith(b"[INFO]"):
+            strline = str(line, "utf-8").strip("][")
+            if strline != '':
+                tuple = list(ast.literal_eval(strline))
+                print(tuple)
+                result.append(tuple)
+    #subprocess.run(['python', 'detect.py', '--hide-conf', '--hide-labels', '--conf-thres', '0.4', '--save-crop','--save-txt', '--weights', 'yolov5sV2_epoch_56.pt', '--source', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True)
+    return json.dumps(result)
+    
 if __name__ == "__main__":
     app.run(debug=True)
 # @app.route('/display/<filename>')
