@@ -24,7 +24,7 @@ def detect():
     video = request.files['video']
     video.save(os.path.join(uploads_dir, secure_filename(video.filename)))
     print(video)
-    output = subprocess.run(['python', 'ocr.py','--image', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True, stdout=subprocess.PIPE)
+    output = subprocess.run(['python', 'ocr.py','--image', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True, stdout=subprocess.PIPE) #
     lines = output.stdout.splitlines()
     result = []
     for line in lines:
@@ -34,9 +34,12 @@ def detect():
                 tuple = list(ast.literal_eval(strline))
                 print(tuple)
                 result.append(tuple)
-    #subprocess.run(['python', 'detect.py', '--hide-conf', '--hide-labels', '--conf-thres', '0.4', '--save-crop','--save-txt', '--weights', 'yolov5sV2_epoch_56.pt', '--source', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True)
     return json.dumps(result)
-    
+
+    # subprocess.run(['python', 'detect.py', '--hide-conf', '--hide-labels', '--conf-thres', '0.4', '--save-crop','--save-txt', '--weights', 'yolov5sV2_epoch_56.pt', '--source', os.path.join(uploads_dir, secure_filename(video.filename))], shell=True)
+    obj = secure_filename(video.filename)
+    return obj
+
 if __name__ == "__main__":
     app.run(debug=True)
 # @app.route('/display/<filename>')
